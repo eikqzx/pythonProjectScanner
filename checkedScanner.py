@@ -3,9 +3,12 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 import pythoncom
 from PIL import Image, ImageTk
+from datetime import datetime
+import os
 
 # Declare the scanner variable globally
 scanner = None
+scanned_files = []
 
 def get_connected_scanners():
     wia = win32com.client.Dispatch("WIA.CommonDialog")
@@ -39,9 +42,13 @@ def scan_document():
 
             image = image_item.Transfer()  # Transfer the scanned image
 
-            # Save the scanned image to the selected directory
-            file_path = f"{save_directory}/scanned_image.jpg"
+            # Generate a unique file name based on the current datetime
+            current_datetime = datetime.now().strftime("%Y%m%d%H%M%S")
+            file_path = f"{save_directory}/scanned_image_{current_datetime}.jpg"
             image.SaveFile(file_path)
+
+            # Add the scanned file path to the list
+            scanned_files.append(file_path)
 
             # Show the scanned image
             show_scanned_image(file_path)
@@ -57,6 +64,43 @@ def show_scanned_image(image_path):
     image = Image.open(image_path)
     image.show()
 
+def open_selected_file(listbox):
+    selected_indices = listbox.curselection()
+    if selected_indices:
+        selected_index = selected_indices[0]
+        if 0 <= selected_index < len(scanned_files):
+            selected_file = scanned_files[selected_index]
+            if os.path.exists(selected_file):
+                os.startfile(selected_file)
+            else:
+                messagebox.showerror("File Not Found", f"The selected file '{selected_file}' does not exist.")
+        else:
+            messagebox.showerror("Invalid Selection", "Invalid file selection.")
+    else:
+        messagebox.showinfo("No Selection", "No file selected.")
+
+def show_scanned_files():
+    # Display the list of scanned files
+    if scanned_files:
+        files_window = tk.Toplevel(root)
+        files_window.title("Scanned Files")
+
+        label = tk.Label(files_window, text="List of Scanned Files:")
+        label.pack(pady=10)
+
+        listbox = tk.Listbox(files_window)
+        for file_path in scanned_files:
+            listbox.insert(tk.END, file_path)
+        listbox.pack(pady=20)
+
+        open_button = tk.Button(files_window, text="Open Selected File", command=lambda: open_selected_file(listbox))
+        open_button.pack(pady=10)
+
+        close_button = tk.Button(files_window, text="Close", command=files_window.destroy)
+        close_button.pack(pady=10)
+    else:
+        messagebox.showinfo("No Scanned Files", "No files have been scanned yet.")
+
 def show_scanner_operations(scanner_name):
     global scanner
     operations_window = tk.Toplevel(root)
@@ -67,6 +111,9 @@ def show_scanner_operations(scanner_name):
 
     scan_button = tk.Button(operations_window, text="Scan Document", command=scan_document)
     scan_button.pack(pady=10)
+
+    show_files_button = tk.Button(operations_window, text="Show Scanned Files", command=show_scanned_files)
+    show_files_button.pack(pady=10)
 
     close_button = tk.Button(operations_window, text="Close", command=operations_window.destroy)
     close_button.pack(pady=10)
