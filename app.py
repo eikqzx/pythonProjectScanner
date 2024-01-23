@@ -43,7 +43,9 @@ def get_connected_scanners():
 def scan_document():
     try:
         scanner_id = request.json.get('scannerId')
-        scan_result = perform_scan(scanner_id)
+        dpi = request.json.get('dpi')
+        pages = request.json.get('pages')
+        scan_result = perform_scan(scanner_id,dpi,pages)
 
         if scan_result:
             return jsonify({"message": "Scanning complete", "scannedImageBase64": scan_result})
@@ -54,13 +56,19 @@ def scan_document():
         return jsonify({"error": "Error occurred during scanning."})
 
 
-def perform_scan(scanner_id):
+def perform_scan(scanner_id,dpi,pages):
     pythoncom.CoInitialize()  # Initialize COM
 
     try:
         wia = win32com.client.Dispatch("WIA.CommonDialog")
         dev = wia.ShowSelectDevice()
         if dev.DeviceID == scanner_id:
+            dev.Items(1).Properties("Horizontal Resolution").Value = dpi
+            dev.Items(1).Properties("Vertical Resolution").Value = dpi
+
+            if dev.Properties("Document Handling Select").Value == 1:  # Automatic Document Feeder (ADF)
+                dev.Items(1).Properties("Document Handling Select").Value = pages
+
             image_format = '{B96B3CAF-0728-11D3-9D7B-0000F81EF32E}'  # WIA_FORMAT_JPEG
             image_data = dev.Items(1).Transfer(image_format).FileData.BinaryData
 
