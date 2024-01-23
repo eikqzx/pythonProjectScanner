@@ -5,6 +5,7 @@ from datetime import datetime
 import pythoncom
 import io
 import base64
+from waitress import serve
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -76,5 +77,12 @@ def perform_scan(scanner_id):
 def index():
     return "Flask API is running"
 
+mode = "production"
+host = "0.0.0.0"
 if __name__ == '__main__':
-    app.run(debug=True)
+    if mode == "dev":
+        app.run(host=host,port=5100, debug=True)
+    else:
+        print("Flask API is running at "+host)
+        serve(app,host=host,port=5100)
+    # app.run(debug=True)
