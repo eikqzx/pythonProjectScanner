@@ -85,40 +85,6 @@ def perform_scan(scanner_id,dpi,pages):
     finally:
         pythoncom.CoUninitialize()
 
-@app.route('/api/documentHandlingOptions', methods=['GET'])
-def get_document_handling_options_route():
-    try:
-        scanner_id = request.args.get('scannerId')
-        options = get_document_handling_options(scanner_id)
-
-        if options is not None:
-            return jsonify({"documentHandlingOptions": options})
-        else:
-            return jsonify({"error": "Error occurred while fetching document handling options."})
-    except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({"error": "Error occurred while fetching document handling options."})
-
-def get_document_handling_options(scanner_id):
-    try:
-        wia = win32com.client.Dispatch("WIA.CommonDialog")
-        dev = wia.ShowSelectDevice()
-
-        # Assuming 'scanner_id' is used to identify the selected scanner
-        if dev.DeviceID == scanner_id:
-            # Get available document handling options
-            document_handling_options = []
-            if dev.Properties.Exists("Document Handling Select"):
-                for item in dev.Properties("Document Handling Select").Items:
-                    document_handling_options.append(item.Value)
-
-            return document_handling_options
-        else:
-            return None  # Return None if the selected scanner is not found
-    except Exception as e:
-        print(f"Error: {e}")
-        return None
-
 mode = "production"
 host = "0.0.0.0"
 if __name__ == '__main__':
