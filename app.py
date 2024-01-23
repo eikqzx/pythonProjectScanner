@@ -70,8 +70,11 @@ def perform_scan(scanner_id,dpi,pages):
             dev.Items(1).Properties("Horizontal Resolution").Value = dpi
             dev.Items(1).Properties("Vertical Resolution").Value = dpi
 
-            if dev.Properties("Document Handling Select").Value == 1:  # Automatic Document Feeder (ADF)
-                dev.Items(1).Properties("Document Handling Select").Value = pages
+            if dev.Properties.Exists("Document Handling Select"):
+                # Set the document handling option to indicate the number of pages to scan
+                dev.Properties("Document Handling Select").Value = pages
+            else:
+                return ("The selected scanner does not support multiple pages.")
 
             image_format = '{B96B3CAF-0728-11D3-9D7B-0000F81EF32E}'  # WIA_FORMAT_JPEG
             image_data = dev.Items(1).Transfer(image_format).FileData.BinaryData
