@@ -29,7 +29,8 @@ def get_connected_scanners():
     wia = win32com.client.Dispatch("WIA.CommonDialog")
 
     try:
-
+        list = list_devices()
+        print(list)
         dev = wia.ShowSelectDevice()
 
         scanner_id = dev.DeviceID
@@ -52,12 +53,12 @@ def scan_document():
         scan_result = perform_scan(scanner_id,dpi,pages)
         # print(scan_result)
         if scan_result:
-            return jsonify({"message": "Scanning complete", "scannedImageBase64": scan_result})
+            return jsonify({"status":True,"message": "Scanning complete", "scannedImageBase64": scan_result})
         else:
-            return jsonify({"error": "Error occurred during scanning."})
+            return jsonify({"status":False,"error": "Error occurred during scanning."})
     except Exception as e:
         print(f"Error: {e}")
-        return jsonify({"error": "Error occurred during scanning."})
+        return jsonify({"status":False,"error": "Error occurred during scanning."})
 
 
 def perform_scan(scanner_id,dpi,pages):
@@ -66,18 +67,19 @@ def perform_scan(scanner_id,dpi,pages):
     try:
         wia = win32com.client.Dispatch("WIA.CommonDialog")
         dev = wia.ShowSelectDevice()
+        imageList = []
         if dev.DeviceID == scanner_id:
-            dev.Items(1).Properties("Horizontal Resolution").Value = dpi
-            dev.Items(1).Properties("Vertical Resolution").Value = dpi
-            print("Document Handling Select",dev.Properties.Exists("Document Handling Select"))
-            # if dev.Properties.Exists("Document Handling Select"):
-            #     # Set the document handling option to indicate the number of pages to scan
-            #     dev.Properties("Document Handling Select").Value = pages
+            i = 1
+            while i <= pages:
+                dev.Items(1).Properties("Horizontal Resolution").Value = dpi
+                dev.Items(1).Properties("Vertical Resolution").Value = dpi
 
-            image_format = '{B96B3CAF-0728-11D3-9D7B-0000F81EF32E}'  # WIA_FORMAT_JPEG
-            image_data = dev.Items(1).Transfer(image_format).FileData.BinaryData
+                image_format = '{B96B3CAF-0728-11D3-9D7B-0000F81EF32E}'  # WIA_FORMAT_JPEG
+                image_data = dev.Items(1).Transfer(image_format).FileData.BinaryData
 
-            return base64.b64encode(image_data).decode('utf-8')  # Return the base64-encoded image
+                imageList.append(base64.b64encode(image_data).decode('utf-8'))
+                i+=1
+            return imageList  # Return the base64-encoded image
         else:
             return None
     except Exception as e:
@@ -96,7 +98,7 @@ def get_Handle():
         if scan_result:
             return jsonify({"Properties": scan_result})
         else:
-            return jsonify({"error": "Error occurred during scanning."})
+            return jsonify({"error": "Scanner is offline."})
     except Exception as e:
         print(f"Error: {e}")
         return False
