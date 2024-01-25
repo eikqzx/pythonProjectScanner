@@ -6,13 +6,16 @@ import pythoncom
 import io
 import base64
 from waitress import serve
+import twain
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 @app.route('/')
 def index():
-    return "Flask API is running"
+    loadScanner = twain.SourceManager()
+    scanner = loadScanner.GetSourceList()
+    return jsonify({"scanner":scanner})
 
 @app.route('/api/scannerList', methods=['GET'])
 def get_scanner_list():
@@ -29,8 +32,6 @@ def get_connected_scanners():
     wia = win32com.client.Dispatch("WIA.CommonDialog")
 
     try:
-        list = list_devices()
-        print(list)
         dev = wia.ShowSelectDevice()
 
         scanner_id = dev.DeviceID
