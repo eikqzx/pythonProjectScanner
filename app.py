@@ -7,15 +7,17 @@ import io
 import base64
 from waitress import serve
 import twain
+import tempfile
+import pyinsane2
+import asyncio
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
 
 @app.route('/')
 def index():
-    loadScanner = twain.SourceManager()
-    scanner = loadScanner.GetSourceList()
-    return jsonify({"scanner":scanner})
+    return "API is running on port 5100"
 
 @app.route('/api/scannerList', methods=['GET'])
 def get_scanner_list():
@@ -72,8 +74,8 @@ def perform_scan(scanner_id,dpi,pages):
         if dev.DeviceID == scanner_id:
             i = 1
             while i <= pages:
-                dev.Items(1).Properties("Horizontal Resolution").Value = dpi
-                dev.Items(1).Properties("Vertical Resolution").Value = dpi
+                # dev.Items(1).Properties("Horizontal Resolution").Value = dpi
+                # dev.Items(1).Properties("Vertical Resolution").Value = dpi
 
                 image_format = '{B96B3CAF-0728-11D3-9D7B-0000F81EF32E}'  # WIA_FORMAT_JPEG
                 image_data = dev.Items(1).Transfer(image_format).FileData.BinaryData
