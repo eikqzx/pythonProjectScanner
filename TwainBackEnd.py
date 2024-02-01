@@ -69,12 +69,12 @@ class ClassTwainBackEnd():
                 self.source.request_acquire(0,0)
             except:
                 print("AcquisitionError")
-                return ""
+                return "Acquisition Error"
             while self.next(self):
                 image = self.capture(self)
                 imageList.append(({"imageIndex":index,"base64Image":base64.b64encode(image.getvalue()).decode("utf-8") }))
                 index += 1
-            self.close()
+            self.close(self)
             return imageList
         else:
             print("User clicked cancel")
