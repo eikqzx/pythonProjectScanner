@@ -38,7 +38,7 @@ class ClassTwainBackEnd():
 
             # this will show UI to allow user to select source
         self.open(self,name=scannerName)
-        print("Open source...",self.source)
+        print("Open source...",scannerName)
         if self.source:
             try:
                 self.source.set_capability(twain.ICAP_XRESOLUTION,twain.TWTY_FIX32, float(postDpi))
@@ -56,31 +56,37 @@ class ClassTwainBackEnd():
             try:
                 self.source.set_capability(twain.ICAP_PIXELTYPE,twain.TWTY_UINT16,  self.matchMode(mode))
             except:
-                print("Could not set mode to '%s'" % isDuplex)
+                print("Could not set mode to '%s'" % mode)
                 pass
 
             try:
                 self.source.set_capability(twain.ICAP_AUTODISCARDBLANKPAGES,twain.TWTY_BOOL, boolRemove)
             except:
-                print("Could not set mode to '%s'" % removeBlank)
+                print("Could not set auto discard blank pages to '%s'" % removeBlank)
                 pass
 
             try:
                 self.source.request_acquire(0,0)
             except:
                 print("AcquisitionError")
-                pass
+                return ""
             while self.next(self):
                 image = self.capture(self)
                 imageList.append(({"imageIndex":index,"base64Image":base64.b64encode(image.getvalue()).decode("utf-8") }))
                 index += 1
+            self.close()
             return imageList
         else:
             print("User clicked cancel")
 
     def scannerList():
+        listObjectArray = []
         sourceList = twain.SourceManager().GetSourceList()
-        return sourceList
+        for scannerName in sourceList:
+            scanner = twain.SourceManager(0,ProductName=scannerName).GetIdentity()
+            print("scanner",scanner)
+            listObjectArray.append(scanner)
+        return listObjectArray
 
     def open(self, name):
         self.manager = twain.SourceManager(0,ProductName=name )
