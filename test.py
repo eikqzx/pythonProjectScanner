@@ -1,7 +1,7 @@
 from waitress import serve
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from TwainBackEnd import ClassTwainBackEnd
+from lib.TwainBackEnd import ClassTwainBackEnd
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
