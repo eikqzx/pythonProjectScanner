@@ -59,11 +59,11 @@ class ClassTwainBackEnd():
                 print("Could not set mode to '%s'" % mode)
                 pass
 
-            try:
-                self.source.set_capability(twain.ICAP_AUTODISCARDBLANKPAGES,twain.TWTY_BOOL, boolRemove)
-            except:
-                print("Could not set auto discard blank pages to '%s'" % removeBlank)
-                pass
+            # try:
+            #     self.source.set_capability(twain.ICAP_AUTODISCARDBLANKPAGES,twain.TWTY_BOOL, boolRemove)
+            # except:
+            #     print("Could not set auto discard blank pages to '%s'" % removeBlank)
+            #     pass
 
             try:
                 self.source.request_acquire(0,0)
@@ -81,11 +81,11 @@ class ClassTwainBackEnd():
 
     def scannerList():
         listObjectArray = []
+        index = 1
         sourceList = twain.SourceManager().GetSourceList()
         for scannerName in sourceList:
-            scanner = twain.SourceManager(0,ProductName=scannerName).GetIdentity()
-            print("scanner",scanner)
-            listObjectArray.append(scanner)
+            listObjectArray.append({"id":index,"scanner":scannerName})
+            index += 1
         return listObjectArray
 
     def open(self, name):
