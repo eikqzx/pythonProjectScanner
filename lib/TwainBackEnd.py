@@ -3,12 +3,15 @@ import twain
 import PIL.ImageTk
 import PIL.Image
 import base64
+import tkinter as tk
 
 class ClassTwainBackEnd():
     manager = None
     source = None
     resolution = 300
     duplex = False
+
+    dummy_window = tk.Tk()
 
     def matchMode(modeStr):
         if modeStr == 'bw':
@@ -82,14 +85,15 @@ class ClassTwainBackEnd():
     def scannerList():
         listObjectArray = []
         index = 1
-        sourceList = twain.SourceManager().GetSourceList()
+        dummy_window = tk.Tk()
+        sourceList = twain.SourceManager(parent_window=dummy_window).GetSourceList()
         for scannerName in sourceList:
             listObjectArray.append({"id":index,"scanner":scannerName})
             index += 1
         return listObjectArray
 
     def open(self, name):
-        self.manager = twain.SourceManager(0,ProductName=name )
+        self.manager = twain.SourceManager(parent_window=self.dummy_window,ProductName=name )
         if not self.manager:
             return
         if self.source:
