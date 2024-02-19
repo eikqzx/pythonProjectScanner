@@ -110,7 +110,7 @@ class ClassTwainBackEnd():
         except:
             return False
     def capture(self):
-            fileName = "tmp.tmp"
+            fileName = "test"
             try:
                 (handle, more_to_come) = self.source.XferImageNatively()
             except:
@@ -119,7 +119,7 @@ class ClassTwainBackEnd():
             bmp_bytes = twain.dib_to_bm_file(handle)
             img = PIL.Image.open(BytesIO(bmp_bytes), formats=["bmp"])
             img_buffer = BytesIO()
-            img.save(img_buffer, format="BMP")
+            img.save(fileName, format="JPEG")
             twain.global_handle_free(handle)
             return img_buffer
 
