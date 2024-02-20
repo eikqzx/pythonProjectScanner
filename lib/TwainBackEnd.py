@@ -4,6 +4,8 @@ import PIL.ImageTk
 import PIL.Image
 import base64
 import tkinter as tk
+import secrets
+import string
 
 class ClassTwainBackEnd():
     manager = None
@@ -74,8 +76,11 @@ class ClassTwainBackEnd():
                 print("AcquisitionError")
                 return "Acquisition Error"
             while self.next(self):
-                image = self.capture(self)
-                imageList.append(({"imageIndex":index,"base64Image":base64.b64encode(image.getvalue()).decode("utf-8") }))
+                image = self.capture(self,index)
+                if image is None :
+                    break
+                file64 = self.read_file_and_encode_base64(image)
+                imageList.append(({"imageIndex":index,"base64Image":file64,"scanedPath":image }))
                 index += 1
             self.close(self)
             return imageList
@@ -93,15 +98,19 @@ class ClassTwainBackEnd():
         return listObjectArray
 
     def open(self, name):
-        self.manager = twain.SourceManager(parent_window=self.dummy_window,ProductName=name )
+        dummy_window = tk.Tk()
+        self.manager = twain.SourceManager(parent_window=dummy_window, ProductName=name)
         if not self.manager:
             return
         if self.source:
             self.source.destroy()
-            self.source=None
+            self.source = None
         self.source = self.manager.OpenSource(name)
         if self.source:
-            print("%s: %s" % ( name, self.source.GetSourceName() ))
+            print("%s: %s" % (name, self.source.GetSourceName()))
+
+    def open_from_main_thread(self, name):
+        self.dummy_window.after(0, lambda: self.open(name))
 
     def next(self):
         try:
@@ -109,20 +118,39 @@ class ClassTwainBackEnd():
             return True
         except:
             return False
-    def capture(self):
-            fileName = "test"
-            try:
-                (handle, more_to_come) = self.source.XferImageNatively()
-            except:
-                return None
+    def capture(self,index):
+        random_string = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(10))
+        fileName = "C:/Applications/pythonProjectScanner/Image/test_"+random_string+".jpg"
+        try:
+            (handle, more_to_come) = self.source.XferImageNatively()
+        except twain.excDSTransferCancelled:
+            print("Scanner ran out of paper.")
+            return None
+        except:
+            print("Error capturing image.")
+            return None
 
-            bmp_bytes = twain.dib_to_bm_file(handle)
-            img = PIL.Image.open(BytesIO(bmp_bytes), formats=["bmp"])
-            img_buffer = BytesIO()
-            img.save(fileName, format="JPEG")
-            twain.global_handle_free(handle)
-            return img_buffer
-
+        bmp_bytes = twain.dib_to_bm_file(handle)
+        img = PIL.Image.open(BytesIO(bmp_bytes), formats=["bmp"])
+        img_buffer = BytesIO()
+        img.save(fileName, format="JPEG")
+        twain.global_handle_free(handle)
+        return fileName
     def close(self):
         del self.manager
 
+    def read_file_and_encode_base64(file_path):
+        try:
+            # Open the file in binary read mode ('rb')
+            with open(file_path, 'rb') as file:
+                # Read the binary content of the file
+                file_content_binary = file.read()
+
+            # Encode the binary content as Base64
+            file_content_base64 = base64.b64encode(file_content_binary).decode('utf-8')
+
+            return file_content_base64
+
+        except FileNotFoundError:
+            print(f"Error: File '{file_path}' not found.")
+            return None
