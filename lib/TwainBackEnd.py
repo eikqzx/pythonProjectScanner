@@ -23,13 +23,13 @@ class ClassTwainBackEnd():
         if modeStr == 'color':
             return twain.TWPT_RGB
 
-    def scan(self,scannerName,postDpi,mode,isDuplex,removeBlank):
+    def scan(self,scannerName,postDpi,mode,isDuplex,removeBlank,isADF):
         # sm = twain.SourceManager()
         print("looping scan...")
         imageList =[]
         index = 1
-        boolDuplex = None
-        boolRemove = None
+        # boolDuplex = None
+        # boolRemove = None
 
         if isDuplex == 1:
             boolDuplex = True
@@ -40,6 +40,11 @@ class ClassTwainBackEnd():
             boolRemove = True
         else:
             boolRemove = False
+
+        if isADF == 1:
+            boolADF = True
+        else:
+            boolADF = False
 
             # this will show UI to allow user to select source
         self.open(self,name=scannerName)
@@ -55,7 +60,7 @@ class ClassTwainBackEnd():
             try:
                 self.source.set_capability(twain.CAP_DUPLEXENABLED,twain.TWTY_BOOL, boolDuplex)
             except:
-                print("Could not set duplex to '%s'" % isDuplex)
+                print("Could not set duplex to '%s'" % boolDuplex)
                 pass
 
             try:
@@ -64,11 +69,24 @@ class ClassTwainBackEnd():
                 print("Could not set mode to '%s'" % mode)
                 pass
 
-            # try:
-            #     self.source.set_capability(twain.ICAP_AUTODISCARDBLANKPAGES,twain.TWTY_BOOL, boolRemove)
-            # except:
-            #     print("Could not set auto discard blank pages to '%s'" % removeBlank)
-            #     pass
+            try:
+                self.source.set_capability(twain.ICAP_AUTODISCARDBLANKPAGES,twain.TWTY_BOOL, boolRemove)
+            except:
+                print("Could not set auto discard blank pages to '%s'" % boolRemove)
+                pass
+
+            try:
+                self.source.set_capability(twain.CAP_FEEDERLOADED ,twain.TWTY_BOOL, False)
+            except:
+                print("Could not set fCAP_FEEDERLOADED to '%s'" % False)
+                pass
+
+            try:
+                capability = self.source.get_capability(twain.ICAP_AUTODISCARDBLANKPAGES)
+                print("Capability is",capability)
+            except:
+                print("capability not support")
+                pass
 
             try:
                 self.source.request_acquire(0,0)
@@ -120,12 +138,12 @@ class ClassTwainBackEnd():
             return False
     def capture(self,index):
         random_string = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(10))
-        fileName = "C:/Applications/pythonProjectScanner/Image/test_"+random_string+".jpg"
+        fileName = "C:/Work/pythonProjectScanner/Image/test_"+random_string+".JPEG"
         try:
             (handle, more_to_come) = self.source.XferImageNatively()
-        except twain.excDSTransferCancelled:
-            print("Scanner ran out of paper.")
-            return None
+        # except twain.excDSTransferCancelled:
+        #     print("Scanner ran out of paper.")
+        #     return None
         except:
             print("Error capturing image.")
             return None
@@ -133,7 +151,8 @@ class ClassTwainBackEnd():
         bmp_bytes = twain.dib_to_bm_file(handle)
         img = PIL.Image.open(BytesIO(bmp_bytes), formats=["bmp"])
         img_buffer = BytesIO()
-        img.save(fileName, format="JPEG")
+        dpiData=(300,300)
+        img.save(fileName, format="JPEG",quality=80)
         twain.global_handle_free(handle)
         return fileName
     def close(self):

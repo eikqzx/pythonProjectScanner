@@ -13,7 +13,8 @@ def indexx():
     modeStr = request.json.get('mode') # ‘bw’, ‘gray’, ‘color’
     isDuplex = request.json.get('isDuplex')
     removeBlankInt = request.json.get('removeBlank')
-    list = ClassTwainBackEnd.scan(self=ClassTwainBackEnd,scannerName=scannerName,postDpi=postDpi,mode=modeStr,isDuplex=isDuplex,removeBlank=removeBlankInt)
+    ADF = request.json.get('isADF')
+    list = ClassTwainBackEnd.scan(self=ClassTwainBackEnd,scannerName=scannerName,postDpi=postDpi,mode=modeStr,isDuplex=isDuplex,removeBlank=removeBlankInt,isADF=ADF)
     # print("list:",list)
     if list == None:
         list = "Scanner is Offline"
