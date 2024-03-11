@@ -138,7 +138,7 @@ class ClassTwainBackEnd():
             return False
     def capture(self,index):
         random_string = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(10))
-        fileName = "C:/Work/pythonProjectScanner/Image/test_"+random_string+".JPEG"
+        fileName = "C:/Work/pythonProjectScanner/Image/test.JPEG"
         try:
             (handle, more_to_come) = self.source.XferImageNatively()
         # except twain.excDSTransferCancelled:
